@@ -1,0 +1,20 @@
+{
+  "name": "@byteagrox/validation",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@byteagrox/types": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@byteagrox/config": "workspace:*",
+    "typescript": "^5.6.3"
+  }
+}
