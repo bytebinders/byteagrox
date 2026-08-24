@@ -1,0 +1,50 @@
+---
+description: ByteAgroX monorepo structure, naming, and coding conventions
+alwaysApply: true
+---
+
+# Project Conventions
+
+## Monorepo Layout
+
+- **Apps**: `apps/web` (Next.js), `apps/api` (NestJS)
+- **Packages**: `@byteagrox/*` workspace scope — import across packages, not deep relative paths
+- **Docs**: `docs/` for architecture, security, and feature specs in `docs/issues/`
+
+## NestJS Module Pattern
+
+Each API feature lives under `apps/api/src/<feature>/`:
+
+```
+<feature>/
+├── <feature>.module.ts
+├── <feature>.controller.ts
+└── <feature>.service.ts
+```
+
+Register new modules in `app.module.ts`.
+
+## Naming
+
+| Kind | Convention | Example |
+|------|-----------|---------|
+| Enums | PascalCase / SCREAMING_SNAKE values | `OrderStatus.PAYMENT_SECURED` |
+| Zod schemas | camelCase + `Schema` | `createOrderSchema` |
+| DB tables | snake_case plural | `audit_logs` |
+| Services | PascalCase + `Service` | `EscrowService` |
+| Files | kebab-case or dot-separated | `health.controller.ts` |
+
+## Financial Domain
+
+- Currency amounts in **NGN** (`pricePerUnitNgn`, `totalAmountNgn`)
+- Order progress via **`OrderStatus` enum only** — no `isPaid`, `isSettled`, etc.
+- State transitions via `isValidOrderTransition()` from `@byteagrox/types`
+
+## Formatting & CI
+
+- Run `pnpm format` before committing TS/TSX/MD/JSON changes
+- `pnpm typecheck` must pass; CI runs on Node 22 with pnpm 10
+
+## Maturity Check
+
+Before implementing a feature, check `docs/issues/` for the spec. Distinguish implemented code (e.g. `GET /health`) from planned work.

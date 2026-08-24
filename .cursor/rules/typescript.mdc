@@ -1,0 +1,55 @@
+---
+description: TypeScript standards for ByteAgroX monorepo
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript Standards
+
+## Compiler Settings
+
+- **Strict mode always on** — extends `packages/config/tsconfig.base.json`
+- Target ES2022; packages use `NodeNext` module resolution
+- API overrides: `commonjs`, `experimentalDecorators`, `emitDecoratorMetadata`
+- Web overrides: `bundler` resolution, `@/*` path alias
+
+## Imports
+
+```typescript
+// ✅ Workspace packages
+import { OrderStatus, isValidOrderTransition } from '@byteagrox/types';
+import { createOrderSchema } from '@byteagrox/validation';
+import { db } from '@byteagrox/database';
+
+// ✅ Relative within same package
+import { StellarClient } from './client';
+
+// ❌ Web importing backend-only packages
+import { db } from '@byteagrox/database'; // in apps/web
+```
+
+## Types & Enums
+
+- Shared domain types live in `@byteagrox/types` — do not duplicate enums across packages
+- Zod schemas use `z.nativeEnum(OrderStatus)` for enum fields
+- Prefer explicit return types on public service methods
+
+## Error Handling
+
+```typescript
+// ❌ Silent catch
+try { await fetchData(); } catch (e) {}
+
+// ✅ Explicit errors with context
+if (request.amountNgn <= 0) {
+  throw new Error('Payment amount must be greater than zero');
+}
+```
+
+Use NestJS HTTP exceptions (`BadRequestException`, `UnauthorizedException`) at the API boundary.
+
+## Naming Alignment
+
+- TS interfaces: camelCase fields (`farmLocation`, `createdAt`)
+- Drizzle columns: snake_case in schema (`farm_location`, `created_at`)
+- Keep enum values in sync between `@byteagrox/types` and `packages/database/src/schema/index.ts`

@@ -158,6 +158,10 @@ cp .env.example .env
    ```bash
    pnpm db:migrate
    ```
+4. Seed sample product categories and Hadejia produce:
+   ```bash
+   pnpm db:seed
+   ```
 
 ---
 
