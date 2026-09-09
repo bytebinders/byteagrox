@@ -1,0 +1,58 @@
+---
+description: ByteAgroX security requirements for financial and auth code
+alwaysApply: true
+---
+
+# Security Considerations
+
+ByteAgroX is a high-integrity financial application. Apply these rules to all changes.
+
+## Explicit State Machine
+
+Order status changes **must** call `isValidOrderTransition(current, next)` from `@byteagrox/types` before any DB write. Reject invalid transitions with `400 Bad Request`. Never skip or bypass the transition graph.
+
+```typescript
+if (!isValidOrderTransition(order.status, nextStatus)) {
+  throw new BadRequestException('Invalid order status transition');
+}
+```
+
+## Audit Logs
+
+Every financial status change must append an immutable row to `audit_logs` **inside the same `db.transaction()`** as the entity update. Logs are append-only — never update or delete audit rows.
+
+```typescript
+await db.transaction(async (tx) => {
+  await tx.update(orders).set({ status: nextStatus }).where(eq(orders.id, orderId));
+  await tx.insert(auditLogs).values({
+    entityName: 'orders',
+    entityId: orderId,
+    action: 'ORDER_STATUS_TRANSITION',
+    previousState: currentStatus,
+    newState: nextStatus,
+    performedByUserId: userId,
+  });
+});
+```
+
+## Non-Custodial Secrets
+
+- User keys and secret keys are **never** exposed to web clients
+- `apps/web` must not depend on `@byteagrox/database` or `@byteagrox/stellar`
+- Load secrets from env only: `DATABASE_URL`, `STELLAR_ESCROW_SECRET_KEY`, `JWT_SECRET`
+- Never commit `.env`, seeds, `.pem`, or `.key` files
+- Stellar private key logic stays in `packages/stellar` (backend-only)
+
+## Input Hygiene
+
+All API inputs sanitized via Zod schemas in `@byteagrox/validation`. Parse at the controller boundary; never trust raw request bodies.
+
+```typescript
+const dto = createOrderSchema.parse(req.body);
+```
+
+## Additional Requirements
+
+- Financial updates use `db.transaction()` with row-level consistency
+- Payment/escrow operations require idempotency keys to prevent double-charge
+- Role checks via `@byteagrox/auth` before privileged actions
